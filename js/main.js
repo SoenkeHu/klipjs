@@ -3,6 +3,9 @@ console.log("init")
 $(document).ready( function(){
     
     //CREATE STAGE VARIABLEEEEEEEEE
+    var settings = {
+        flexHeight: true,
+    }
     var stage = {
         img: {
             size: {
@@ -31,7 +34,30 @@ $(document).ready( function(){
             y:0,
         },
         ratio: 0,
+        offset: {
+            x: 0,
+            y:0
+        }
     }
+    
+    var objects = [
+            {
+                type: "imgrect",
+                visible: true,
+                img_url: "../images/button_interaktiv.png",
+                size: {
+                    x: 100,
+                    y: 100,
+                },
+                pos: {
+                    x: 600,
+                    y: 150,
+                },
+                onClick:{
+                    
+                }
+            }
+        ]
     
     //CREATEEEEEEEEEEEEEEEEEEEEEEEE
     var c = $('#respondCanvas');
@@ -48,60 +74,45 @@ $(document).ready( function(){
         stage.size.y = background_img.height;
         stage.img.size.x = background_img.width;
         stage.img.size.y = background_img.height;
-        console.log(background_img_url)
-        console.log(stage.img.size)
+        console.log("loaded")
         respondCanvas();
     }
+    
+    //var circle_img = new Image();
+    //circle_img.src = 
     
     //ct.fillText("Loading",10,50);
     
     
     //RESIZEEEEEEEEEEEEEEEEEEEEEEEE
     $(window).resize( respondCanvas );
-    function respondCanvas(){ 
-        c.attr('width', $(container).width() ); //max width
-        c.attr('height', $(container).height() ); //max height
+    function respondCanvas(){
+        canvas.offset.x = c.offset().left;
+        canvas.offset.y = c.offset().top;
+        //console.log("respond")
+        
         canvas.size.x = $(container).width()
-        canvas.size.y = $(container).height()
-        updateCanvas()
-    }
-    
-    //UPDATE EVERYTIMEEEEEEEEEEEEEE
-    /*function updateCanvas() {
-        //console.log(-1*((stage.size.x-canvas.size.x)/2))
-        //console.log(stage.size.x, canvas.size.x, ((100/stage.size.x)*canvas.size.x)/100)
         
-        var faktor = (-1*((stage.size.x-canvas.size.x)/2))
-        //console.log( -1 * (faktor*(-1*stage.zoom)))
-        //console.log(stage.size.x*stage.zoom)+((stage.size.x*stage.zoom)-stage.size.x)
-        //stage.zoom = Math.max(stage.zoom, 0.5)
-        stage.zoom = ( ( 100 / stage.size.x ) * canvas.size.x ) / 100;
-        var zmoffset = Math.max( canvas.size.y - (stage.size.y*stage.zoom), 0 )
-        
-        console.log( canvas.size.y - (stage.size.y*stage.zoom) < 0 ? false : true )
-        //console.log(zmoffset)
-        if(canvas.size.y - (stage.size.y*stage.zoom) < 0) {
-            var width = (stage.size.x *stage.zoom)//((stage.size.x*stage.zoom)-stage.size.x)+stage.size.x
-            var height = (stage.size.y*stage.zoom)+ zmoffset
-            var offsety = (-1*(((stage.size.y*stage.zoom)-canvas.size.y)/2)) - (zmoffset /2)
+        c.attr('width', $(container).width());
+        if(settings.flexHeight) {
+            var nheight = (stage.img.size.y/stage.img.size.x)* $(container).width()
+            c.attr('height', nheight)
+            canvas.size.y = nheight
+        } else {
+            c.attr('height', $(container).height());
+            canvas.size.y = $(container).height()
         }
         
-        ct.drawImage(background_img, 0, offsety,width, height)//, background_img.width, background_img.height);
-        
-        //console.log(stage, canvas)
-    }*/
-    function updateCanvas() {        
         stage.img.ratio = (stage.img.size.y / stage.img.size.x)       // original img ratio
         canvas.ratio = (canvas.size.y / canvas.size.x)     // container ratio
         stage.size.y = 0
         stage.size.x = 0
-        if (canvas.ratio > stage.img.ratio) 
-        {
+        
+        // GET RATIO RESOLUTIONEEE
+        if (canvas.ratio > stage.img.ratio) {
             stage.size.y = canvas.size.y
             stage.size.x = (canvas.size.y / stage.img.ratio)
-        } 
-        else 
-        {
+        } else {
             stage.size.x = canvas.size.x
             stage.size.y = (canvas.size.x * stage.img.ratio)
         }
@@ -109,9 +120,58 @@ $(document).ready( function(){
         stage.zoom = ( ( 100 / stage.img.size.x  ) * stage.size.x ) / 100;
         stage.offset.y = getCenteroffsety()
         stage.offset.x = getCenteroffsetx()
+        
+        
+        
+        
+        
+        updateCanvas()
+    }
+    
+    //UPDATE EVERYTIMEEEEEEEEEEEEEE
+    function updateCanvas() {
         ct.drawImage(background_img, stage.offset.x, stage.offset.y, stage.size.x, stage.size.y)//, background_img.width, background_img.height);
-        console.log(stage.zoom)
-        //console.log(stage, canvas)
+
+        for (var i = 0; i < objects.length; i++) {
+            var el = objects[i];
+            if(el.hasOwnProperty("visible"))
+                if(el.visible == false)
+                    continue
+           drawObject(el)
+            
+        }
+    }
+    
+    function getRelPos(el) {
+        return {
+            x: stage.offset.x + (el.pos.x*stage.zoom),
+            y: stage.offset.y + (el.pos.y*stage.zoom),
+            w: el.size.x*stage.zoom,
+            h: el.size.y*stage.zoom
+        }
+    }
+    
+    function drawObject(el, type) {
+        var elmp = getRelPos(el)
+         switch(objects.type) {
+                case "rect":
+                    ct.fillRect(elmp.x,elmp.y,elmp.w,elmp.h)
+                
+                default:
+                case "imgrect":
+                    if(!el.img) {
+                        el.img = new Image()
+                        el.img.src = el.img_url;
+                        el.img.onload = function() {
+                            //console.log("ok")
+                            ct.drawImage(el.img,elmp.x,elmp.y,elmp.w,elmp.h);
+                        }
+                    } else {
+                        ct.drawImage(el.img,elmp.x,elmp.y,elmp.w,elmp.h);
+                    }
+                
+        }
+        
     }
     
     function getCenteroffsety() {
@@ -130,5 +190,39 @@ $(document).ready( function(){
 
     //INITIALIZEEEEEEEEEEEEEEEEEEEE
     
+    
+    
+    //CLICK
+    
+    c.on('click', function(event) {
+        //console.log(event.pageX - canvas.offset.x, event.pageY - canvas.offset.y)
+        var clickedObjects = [];
+        for (var i = 0; i < objects.length; i++) {
+            var hit = checkClick(objects[i],event.pageX - canvas.offset.x, event.pageY - canvas.offset.y)
+            //console.log(hit)
+            if(hit)
+                clickedObjects.push(objects[i])
+        }
+        
+        if(clickedObjects.length>0) {
+            clickAction(clickedObjects[clickedObjects.length-1])
+        }
+        
+    })
+    
+    function checkClick(obj,x,y) {
+        var elmp = getRelPos(obj);
+        
+         if (y > elmp.y && y < elmp.y + elmp.h 
+            && x > elmp.x && x < elmp.x + elmp.w) {
+                return true
+            } else {
+                return false
+            }
+    }
+    
+    function clickAction(obj) {
+        console.log(obj)
+    }
     
 }); 
