@@ -43,6 +43,7 @@ $(document).ready( function(){
     var objects = [
             {
                 type: "imgrect",
+                id: "0",
                 visible: true,
                 img_url: "../images/button_interaktiv.png",
                 size: {
@@ -54,7 +55,26 @@ $(document).ready( function(){
                     y: 150,
                 },
                 onClick:{
-                    
+                    type: "show",
+                    id: "1"
+                }
+            },
+            {
+                type: "rect",
+                color:"#fff",
+                id: "1",
+                visible: false,
+                size: {
+                    x: 500,
+                    y: 150,
+                },
+                pos: {
+                    x: 720,
+                    y: 150,
+                },
+                onClick:{
+                    type: "hide",
+                    id:"1"
                 }
             }
         ]
@@ -151,12 +171,14 @@ $(document).ready( function(){
         }
     }
     
-    function drawObject(el, type) {
+    function drawObject(el) {
         var elmp = getRelPos(el)
-         switch(objects.type) {
+         switch(el.type) {
                 case "rect":
+                    if(el.color)
+                        ct.fillStyle=el.color;
                     ct.fillRect(elmp.x,elmp.y,elmp.w,elmp.h)
-                
+                    break
                 default:
                 case "imgrect":
                     if(!el.img) {
@@ -198,6 +220,9 @@ $(document).ready( function(){
         //console.log(event.pageX - canvas.offset.x, event.pageY - canvas.offset.y)
         var clickedObjects = [];
         for (var i = 0; i < objects.length; i++) {
+            if(objects[i].hasOwnProperty("visible"))
+                if(objects[i].visible == false)
+                    continue
             var hit = checkClick(objects[i],event.pageX - canvas.offset.x, event.pageY - canvas.offset.y)
             //console.log(hit)
             if(hit)
@@ -222,7 +247,31 @@ $(document).ready( function(){
     }
     
     function clickAction(obj) {
-        console.log(obj)
+        if(!obj.onClick)
+            return
+        switch (obj.onClick.type) {
+            case 'show':
+                var shObj = objects.filter(function(e) {
+                    return e.id == obj.onClick.id
+                })
+                if(shObj.length> 0) {
+                    shObj[0].visible = true;
+                }
+                updateCanvas()
+                break;
+            case 'hide':
+                var shObj = objects.filter(function(e) {
+                    return e.id == obj.onClick.id
+                })
+                if(shObj.length> 0) {
+                    shObj[0].visible = false;
+                }
+                updateCanvas()
+                break;
+            
+            default:
+                // code
+        }
     }
     
 }); 
