@@ -41,7 +41,13 @@ $(document).ready(function() {
         }
     }
 
-    var objects = [{
+    var objects = [
+    {
+      type:"connector",
+      from:"0",
+      to:"1",
+    },
+    {
         type: "imgrect",
         id: "0",
         visible: true,
@@ -62,6 +68,7 @@ $(document).ready(function() {
         type: "rect",
         color: [255, 255, 255, 1],
         id: "1",
+        draggable: true,
         animation: [
             {
                 type: "fadein",
@@ -78,8 +85,8 @@ $(document).ready(function() {
             y: 150,
         },
         pos: {
-            x: 720,
-            y: 150,
+            x: 1020,
+            y: 450,
         },
         onClick: {
             type: "hide",
@@ -176,8 +183,16 @@ $(document).ready(function() {
             if (el.hasOwnProperty("visible"))
                 if (el.visible == false)
                     continue
+            
             drawObject(el)
 
+        }
+    }
+    
+    function getRelPoint(x,y) {
+        return {
+            x: stage.offset.x + (x * stage.zoom),
+            y: stage.offset.y + (y * stage.zoom),
         }
     }
 
@@ -192,38 +207,98 @@ $(document).ready(function() {
 
     function drawObject(el) {
         var props = Object.assign({}, el);
-        if (el.__anim) {
+        
+
+        if (el.__anim && el.__anim.active.length>0) {
             drawAnimation(el)
             //console.log(el.__anim.active)
-            if (el.__anim)
-                props = Object.assign(props, el.__anim.props)
+            //console.log(el.__anim.props.color, el.visible)
+        
+            props = Object.assign(props, el.__anim.props)
                 //return
         }
+        
+        if (el.hasOwnProperty("visible"))
+            if (el.visible == false)
+                return
+        //TODO: schöner machen
+        
         //console.dir(props)
-        var elmp = getRelPos(el)
+        
         switch (el.type) {
             case "rect":
+                //TODO: global alpha
+                var elmp = getRelPos(el)
                 if (props.color) {
                     ct.fillStyle = getColorRGBA(props.color);
                 }
                 ct.fillRect(elmp.x, elmp.y, elmp.w, elmp.h)
                 break
-            default:
             case "imgrect":
+                /*
+                    context.globalAlpha = 0.5;
+                    context.drawImage(image, x, y);
+                    context.globalAlpha = 1.0;
+                */
+                var elmp = getRelPos(el)
                 if (!el.img) {
                     el.img = new Image()
                     el.img.src = el.img_url;
                     el.img.onload = function() {
-                        //console.log("ok")
                         ct.drawImage(el.img, elmp.x, elmp.y, elmp.w, elmp.h);
                     }
                 }
                 else {
                     ct.drawImage(el.img, elmp.x, elmp.y, elmp.w, elmp.h);
                 }
+                break;
+            case "connector":
+                var points = [],
+                    obj1 = getObjfromID(el.from),
+                    obj2 = getObjfromID(el.to);
+                var pos1 = {
+                        x: obj1.pos.x+(obj1.size.x/2),
+                        y: obj1.pos.y+(obj1.size.y/2)
+                    },
+                    pos2 = {
+                        x: obj2.pos.x+(obj2.size.x/2),
+                        y: obj2.pos.y+(obj2.size.y/2)
+                    };
+                var pos1rel = getRelPoint(pos1.x,pos1.y),
+                    pos2rel = getRelPoint(pos2.x,pos2.y);
+                points.push([pos1rel.x,pos1rel.y]);
+                points.push([pos2rel.x,pos2rel.y]);
+                var angle = (getAngleBetweenPoints(points[0][0],points[0][1],points[1][0],points[1][1]) )
+                ct.beginPath();
+                ct.moveTo(points[0][0],points[0][1]);
+                ct.lineTo(points[0][0]+(2000*Math.cos(angle)), points[0][1]+(2000*Math.sin(angle)))
+                ct.strokeStyle="#FFFFFF";
+                ct.stroke();
+            default:
+
 
         }
 
+    }
+    
+    function getAngleBetweenPoints(x1, y1, x2, y2) {
+        var deltaY = y2 - y1
+        var deltaX = x2 - x1
+        return angle_trunc(Math.atan2(deltaY, deltaX))
+    }
+    
+    function angle_trunc(a) {
+        while (a < 0.0) {
+            a += Math.PI * 2
+        }
+            
+        return a
+    }
+    
+    function getObjfromID(id) {
+        return objects.filter(function(e) {
+            return e.id == id;
+        })[0]
     }
 
     function drawAnimation(el) {
@@ -236,19 +311,38 @@ $(document).ready(function() {
 
             switch (animation.type) {
                 case constants.animations.fadein:
-                    var color = el.__anim.props.color;
-                    color = el.color;
+                    el.__anim.props.color = [];
+                    var color = el.__anim.props.color
+                    color = Object.assign(color,el.color);
                     var process = ((Date.now() - el.__anim.active[i].time) / animation.time)
                     //console.log(el.__anim.active[i].time)
                     if (process >= 1) {
                         color[3] = 1
                         el.__anim.active = el.__anim.active.filter(function(e) {
-                            
                             return e.type != animation.type
                         });
                         return
                     }
                     color[3] = process
+                    break;
+                    
+                case constants.animations.fadeout:
+                    el.__anim.props.color = [];
+                    var color = el.__anim.props.color
+                    color = Object.assign(color,el.color);
+                    
+                    var process = ((Date.now() - el.__anim.active[i].time) / animation.time)
+                    //console.log(el.__anim.active[i].time)
+                    if (process >= 1) {
+                        console.log("fin")
+                        color[3] = 0
+                        el.__anim.active = el.__anim.active.filter(function(e) {
+                            return e.type != animation.type
+                        });
+                        el.visible = false;
+                        return
+                    }
+                    color[3] = 1-process
                     break;
     
                 default:
@@ -290,10 +384,12 @@ $(document).ready(function() {
         if (clickedObjects.length > 0) {
             clickAction(clickedObjects[clickedObjects.length - 1])
         }
-
     })
 
     function checkClick(obj, x, y) {
+        if(!obj.pos){
+            return
+        }
         var elmp = getRelPos(obj);
 
         if (y > elmp.y && y < elmp.y + elmp.h && x > elmp.x && x < elmp.x + elmp.w) {
@@ -309,12 +405,13 @@ $(document).ready(function() {
             return
         /*if (obj.__anim)
             return*/
+            console.log("click")
         switch (obj.onClick.type) {
             case 'show':
                 var shObj = objects.filter(function(e) {
                     return e.id == obj.onClick.id
                 })
-                if (shObj.length > 0) {
+                if (shObj.length > 0&& !shObj[0].visible) {
                     shObj[0].visible = true;
                     createAnimation(shObj[0], obj.onClick.type)
                     console.log(shObj[0])
@@ -325,8 +422,8 @@ $(document).ready(function() {
                 var shObj = objects.filter(function(e) {
                     return e.id == obj.onClick.id
                 })
-                if (shObj.length > 0) {
-                    shObj[0].visible = false;
+                if (shObj.length > 0 && shObj[0].visible) {
+                    //shObj[0].visible = false;
                     createAnimation(shObj[0], obj.onClick.type)
                 }
                 //updateCanvas()
@@ -344,7 +441,6 @@ $(document).ready(function() {
                 el.__anim = {
                     active: [],
                     props: {
-                        
                     }
                 }
             }
@@ -362,10 +458,10 @@ $(document).ready(function() {
             console.log(animation.type)
             switch (animation.type) {
                 case constants.animations.fadein:
-                    el.__anim.active.push({type:animation.type, time: Date.now()})
+                    addToActiveAnimation(el,{type:animation.type, time: Date.now()})
                     break;
                 case constants.animations.fadeout:
-                    el.__anim.active.push({type:animation.type, time: Date.now()})
+                    addToActiveAnimation(el,{type:animation.type, time: Date.now()})
                     break;
                 default:
             }
@@ -374,6 +470,11 @@ $(document).ready(function() {
         
         console.log(el.__anim)
 
+    }
+    
+    function addToActiveAnimation(el, obj) {
+        //TODO: dont push if allready
+        el.__anim.active.push(obj)
     }
 
 });
