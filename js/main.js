@@ -6,6 +6,7 @@ $(document).ready(function() {
     //CREATE STAGE VARIABLEEEEEEEEE
     var settings = {
         flexHeight: true,
+
     }
     var stage = {
         img: {
@@ -38,6 +39,12 @@ $(document).ready(function() {
         offset: {
             x: 0,
             y: 0
+        },
+        dnd: {
+            stage: 0,
+            fposx:0,
+            fposy:0,
+            fobj: null,
         }
     }
 
@@ -88,10 +95,10 @@ $(document).ready(function() {
             x: 1020,
             y: 450,
         },
-        onClick: {
+        /*onClick: {
             type: "hide",
             id: "1"
-        }
+        }*/
     }]
 
     //CREATEEEEEEEEEEEEEEEEEEEEEEEE
@@ -193,6 +200,12 @@ $(document).ready(function() {
         return {
             x: stage.offset.x + (x * stage.zoom),
             y: stage.offset.y + (y * stage.zoom),
+        }
+    }
+    function resRelPoint(x,y) {
+        return {
+            x:((x-stage.offset.x)/stage.zoom),
+            y:(y/stage.zoom)-stage.offset.y
         }
     }
 
@@ -369,7 +382,58 @@ $(document).ready(function() {
 
     //CLICK
     c.on('click', function(event) {
+        console.log(canvas.dnd.stage)
         //console.log(event.pageX - canvas.offset.x, event.pageY - canvas.offset.y)
+        var clickedObjects = getClickedObj(event)
+
+        if (clickedObjects.length > 0) {
+            clickAction(clickedObjects[clickedObjects.length - 1])
+        }
+    })
+    c.on('mousedown', function(event) {
+        
+        var clickedObjects = getClickedObj(event)
+
+        if (clickedObjects.length > 0) {
+            var obj = (clickedObjects[clickedObjects.length - 1])
+            if(obj.draggable) {
+                canvas.dnd.stage = 1;
+            } else {
+                return
+            }
+        } else {
+            return
+        }
+        console.log(obj.pos.x,obj.pos.y)
+
+        var relPos = getRelPos(obj);
+        canvas.dnd.fposx = (event.pageX - canvas.offset.x) - relPos.x;
+        canvas.dnd.fposy = (event.pageY - canvas.offset.y) - relPos.y;
+        canvas.dnd.fobj = obj;
+    })
+    c.on('mousemove', function(event) {
+        if(canvas.dnd.stage == 1) {
+            canvas.dnd.stage = 2;
+        }
+        if(canvas.dnd.stage == 2) {
+            var npos = resRelPoint((event.pageX - canvas.offset.x)-canvas.dnd.fposx,(event.pageY - canvas.offset.y)-canvas.dnd.fposy)
+            canvas.dnd.fobj.pos.x = npos.x
+            canvas.dnd.fobj.pos.y = npos.y
+        }
+        //console.log(canvas.dnd.fposx)
+        //console.log(resRelPoint(canvas.dnd.fposx + (event.pageX - canvas.offset.x)).x)
+        
+        //canvas.dnd.fobj.pos.x = resRelPoint(canvas.dnd.fposx,canvas.dnd.fposy) + (event.pageX - canvas.offset.x)
+
+
+    })
+    c.on('mouseup', function(event) {
+        canvas.dnd.stage = 0;
+        
+
+    })
+    
+    function getClickedObj(event) {
         var clickedObjects = [];
         for (var i = 0; i < objects.length; i++) {
             if (objects[i].hasOwnProperty("visible"))
@@ -380,11 +444,8 @@ $(document).ready(function() {
             if (hit)
                 clickedObjects.push(objects[i])
         }
-
-        if (clickedObjects.length > 0) {
-            clickAction(clickedObjects[clickedObjects.length - 1])
-        }
-    })
+        return clickedObjects
+    }
 
     function checkClick(obj, x, y) {
         if(!obj.pos){
