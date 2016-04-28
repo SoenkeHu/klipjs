@@ -1,5 +1,16 @@
 /*global $*/
 console.log("init");
+Object.assign = function assign(target, source) {
+    for (var index = 1, key, src; index < arguments.length; ++index) {
+        src = arguments[index];
+        for (key in src) {
+            if (Object.prototype.hasOwnProperty.call(src, key)) {
+                target[key] = src[key];
+            }
+        }
+    }
+    return target;
+};
 
 $(document).ready(function() {
 
@@ -20,7 +31,7 @@ $(document).ready(function() {
             x: 0,
             y: 0,
         },
-        size: { //IMAGE SIZEEEEEEEEE
+        size: { //IMAGE SIZE
             x: 0,
             y: 0,
         },
@@ -48,11 +59,7 @@ $(document).ready(function() {
         }
     };
 
-    var objects = [{
-        type: "connector",
-        from: "0",
-        to: "1",
-    }, {
+    var objects = [ {
         type: "imgrect",//TODO: ROTATE
         id: "0",
         visible: true,
@@ -74,30 +81,92 @@ $(document).ready(function() {
         color: [100, 100, 100, 0.8],
         //TODO: OPACITY FOR IMAGES
         id: "1",
-        child: [{
-            type: "imgrect",
-            id: "3",
-            clickable: true,
-            visible: true,
-            img_url: "./images/button_interaktiv.png",
-            size: {
-                x: 40,
-                y: 40,
+        child: [//EVENTS DOWN TO CHILD
+            {
+                type: "connector",
+                from: "0",
+                to: "1",
             },
-            pos: {
-                x: 460,
-                y: 0,
+            {
+                type: "rect",
+                visible: true,
+                clickable: true,
+                draggable: true,
+                dragID: "1",
+                color: [255, 255, 255, 0.5],
+                //TODO: OPACITY FOR IMAGES
+                id: "4",
+                animation: [{
+                    on: "show",
+                    type: "fadein",
+                    time: 200
+                }, {
+                    on: "hide",
+                    type: "fadeout",
+                    time: 200
+                }],
+                size: {
+                    x: 500,
+                    y: 40,
+                },
+                pos: {
+                    x: 0,
+                    y: 0,
+                },
             },
-            onClick: {
-                type: "hide",
-                id: "1"
-            }
-        }],
-        draggable: true,
+            {
+                type: "rect",
+                visible: true,
+                clickable: false,
+                dragID: "1",
+                color: [255, 255, 255, 0.8],
+                //TODO: OPACITY FOR IMAGES
+                id: "5",
+                animation: [{
+                    on: "show",
+                    type: "fadein",
+                    time: 2000
+                }, {
+                    on: "hide",
+                    type: "fadeout",
+                    time: 200
+                }],
+                size: {
+                    x: 500,
+                    y: 110,
+                },
+                pos: {
+                    x: 0,
+                    y: 40,
+                },
+            },
+            {
+                type: "imgrect",
+                id: "3",
+                clickable: true,
+                visible: true,
+                img_url: "./images/button_interaktiv.png",
+                size: {
+                    x: 40,
+                    y: 40,
+                },
+                pos: {
+                    x: 460,
+                    y: 0,
+                },
+                onClick: {
+                    type: "hide",
+                    id: "1"
+                }
+            },
+        ],
+        //draggable: true,
         animation: [{
+            on: "show",
             type: "fadein",
             time: 200
         }, {
+            on: "hide",
             type: "fadeout",
             time: 200
         }],
@@ -235,15 +304,16 @@ $(document).ready(function() {
 
     //RENDER OBJECTS
     function renderObjects(ary) {
+        //console.log(ary)
         for (var i = 0; i < ary.length; i++) {
 
             var el = ary[i];
             if (el.hasOwnProperty("visible"))
-                if (el.visible == false)
+                if (el.visible == false&&!el.__anim)
                     continue;
 
             drawObject(el);
-            if (el.hasOwnProperty("child") && el.child.length > 0) {
+            if (el.hasOwnProperty("child") && el.child.length > 0&& el.visible && el.visible == true) {
                 renderObjects(el.child);
             }
         }
@@ -297,8 +367,8 @@ $(document).ready(function() {
 
     //DRAW OBJECT
     function drawObject(el) {
+        //console.log("DRAWOBJECT", el.id)
         var props = Object.assign({}, el);
-
 
         if (el.__anim && el.__anim.active.length > 0) {
             drawAnimation(el);
@@ -394,6 +464,7 @@ $(document).ready(function() {
     
     //DRAW ANIMATION FOR OBJECT
     function drawAnimation(el) {
+        //console.log(el.id)
         for (var i = 0; i < el.__anim.active.length; i++) {
             var animation = el.animation.filter(function(e) {
                 return e.type == el.__anim.active[i].type;
@@ -403,6 +474,8 @@ $(document).ready(function() {
 
             switch (animation.type) {
                 case constants.animations.fadein:
+                    el.visible = true;
+                    //console.log(el)
                     el.__anim.props.color = [];
                     var color = el.__anim.props.color;
                     color = Object.assign(color, el.color);
@@ -445,7 +518,8 @@ $(document).ready(function() {
     
     //START ANIMATION ON OBJECT FROM EVENT
     function createAnimation(el, event) {
-        console.log(event);
+        //console.log("EVENT",event, el.id);
+        //console.log("CREATEANIMATION", el.id)
         if (el.animation) {
             if (!el.__anim) {
                 el.__anim = {
@@ -453,13 +527,14 @@ $(document).ready(function() {
                     props: {}
                 };
             }
-
+        } else {
+            return
         }
+        
         var anims = el.animation.filter(function(e) {
-            return eventAnimRel[event].filter(function(ee) {
-                return e.type == ee;
-            })[0];
+            return e.on == event;
         });
+        
         //TODO: clean and error handling
         for (var i = 0; i < anims.length; i++) {
             var animation = anims[i];
@@ -478,6 +553,21 @@ $(document).ready(function() {
                     break;
                 default:
             }
+        }
+        
+        console.log(el)
+    }
+    
+    function runOnArray(obj, fnct, params) {
+        for (var i = 0; i < obj.length; i++) {
+            var el = obj[i];
+            var nparams = params.slice(0)
+            nparams.unshift(el)
+            fnct.apply(this, nparams)
+            if(el.hasOwnProperty("child")) {
+                runOnChild(el.child, fnct, params)
+            }
+            
         }
     }
 
@@ -537,7 +627,11 @@ $(document).ready(function() {
                     return e.id == obj.onClick.id;
                 });
                 if (shObj.length > 0 && !shObj[0].visible) {
-                    shObj[0].visible = true;
+                    //shObj[0].visible = true;
+                    if(shObj[0].hasOwnProperty("child")) {// CHECK IF PARAM DOWN HIRACHIE
+                        createAnimation(shObj[0], obj.onClick.type);
+                        runOnArray(shObj[0].child, createAnimation, [obj.onClick.type])
+                    }
                     createAnimation(shObj[0], obj.onClick.type);
                     console.log(shObj[0]);
                 }
@@ -548,6 +642,10 @@ $(document).ready(function() {
                 });
                 if (shObj.length > 0 && shObj[0].visible) {
                     //shObj[0].visible = false;
+                    if(shObj[0].hasOwnProperty("child")) {// CHECK IF PARAM DOWN HIRACHIE
+                        createAnimation(shObj[0], obj.onClick.type);
+                        runOnArray(shObj[0].child, createAnimation, [obj.onClick.type])
+                    }
                     createAnimation(shObj[0], obj.onClick.type);
                 }
                 break;
@@ -565,7 +663,7 @@ $(document).ready(function() {
     c.on('click', function(event) {
         var clickedObjects = getClickedObj(event);
         if (clickedObjects.length > 0) {
-            clickAction(clickedObjects[clickedObjects.length - 1]);
+            clickAction(clickedObjects[clickedObjects.length - 1], true);
         }
     });
     c.on('mousedown', function(event) {
@@ -582,6 +680,10 @@ $(document).ready(function() {
         }
         else {
             return;
+        }
+        
+        if(obj.hasOwnProperty("dragID")) {
+            obj = getObjfromID(obj.dragID)
         }
 
         var relPos = getRelPos(obj);
