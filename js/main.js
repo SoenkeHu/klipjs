@@ -59,7 +59,13 @@ $(document).ready(function() {
         }
     };
 
-    var objects = [ {
+    var objects = [
+        {
+            type: "connector",
+            from: "0",
+            to: "1",
+        },
+        {
         type: "imgrect",//TODO: ROTATE
         id: "0",
         visible: true,
@@ -77,16 +83,11 @@ $(document).ready(function() {
             id: "1"
         }
     }, {
-        type: "rect",
+        type: "rect",//TODO: TEXT
         color: [100, 100, 100, 0.8],
         //TODO: OPACITY FOR IMAGES
         id: "1",
-        child: [//EVENTS DOWN TO CHILD
-            {
-                type: "connector",
-                from: "0",
-                to: "1",
-            },
+        child: [
             {
                 type: "rect",
                 visible: true,
@@ -118,7 +119,7 @@ $(document).ready(function() {
                 type: "rect",
                 visible: true,
                 clickable: false,
-                dragID: "1",
+                //dragID: "1",
                 color: [255, 255, 255, 0.8],
                 //TODO: OPACITY FOR IMAGES
                 id: "5",
@@ -432,9 +433,21 @@ $(document).ready(function() {
                 var angle = (getAngleBetweenPoints(points[0][0], points[0][1], points[1][0], points[1][1]));
                 ct.beginPath();
                 ct.moveTo(points[0][0], points[0][1]);
-                ct.lineTo(points[0][0] + (2000 * Math.cos(angle)), points[0][1] + (2000 * Math.sin(angle)));
+                var angleR = angle//(roundToNearestNum(angle,toRan(360), toRan(45)))
+                var distance = (getDistance(points[0][0],points[0][1],points[1][0],points[1][1]))
+                var point2x = points[0][0] + ((distance/2) * Math.cos(angleR))
+                var point2y = points[0][1] + ((distance/2) * Math.sin(angleR))//(points[1][1]-points[0][1])
+                
+                var point2x2 = point2x + ((distance/3) * Math.cos(angleR+toRan(Math.sign(points[0][0]-points[1][0])*90)))
+                var point2y2 = point2y + ((distance/3) * Math.sin(angleR+toRan(Math.sign(points[0][0]-points[1][0])*90)))
+                
+                ct.lineTo(point2x2,point2y2);
+                
+                ct.lineTo(points[1][0],points[1][1])
+                ct.lineWidth = 3;
                 ct.strokeStyle = "#FFFFFF";
                 ct.stroke();
+
             default:
 
 
@@ -454,9 +467,25 @@ $(document).ready(function() {
             return a;
         }
     }
+    
+    function roundToNearestNum(num, k, step) { //k = 360 num = 60 step = 45
+        var stepsInK = k/step;
+        //console.log(stepsInK)
+        return Math.round((stepsInK/k)*num)*step
+    }
+    
+    function getDistance(x1,y1,x2,y2) {
+        return Math.sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+    }
+    
+    function toRan(deg) {
+        
+        return deg * Math.PI / 180;
+
+    }
 
     //SEARCH AND RETURN OBJECT FROM ID
-    function getObjfromID(id) {
+    function getObjfromID(id) {//TODO: SEARCH CHILD
         return objects.filter(function(e) {
             return e.id == id;
         })[0];
@@ -587,7 +616,9 @@ $(document).ready(function() {
                     if (el.visible == false)
                         continue;
                 var hit = checkClick(el, event.pageX - canvas.offset.x, event.pageY - canvas.offset.y);
-                if (hit && (!el.hasOwnProperty("clickable") || (el.hasOwnProperty("clickable") && el.clickable))) {
+                
+                //TODO: CLEAN UP
+                if (hit && (!el.hasOwnProperty("clickable") || (el.hasOwnProperty("clickable") && el.clickable))&&(!el.hasOwnProperty("__anim")||(el.hasOwnProperty("__anim")&&el.__anim.active.length==0))) {
                     clickedObjects.push(el);
                     if(el.hasOwnProperty("child")) {
                         checkObjs(el.child)
