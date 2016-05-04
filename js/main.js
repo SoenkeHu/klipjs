@@ -91,136 +91,7 @@ if (typeof Object.assign != 'function') {
         }
     };
 
-    var objects = [{
-        type: "connector",
-        from: "0",
-        to: "1",
-    }, {
-        type: "imgrect", //TODO: ROTATE
-        id: "0",
-        visible: true,
-        img_url: "./images/button_interaktiv.png",
-        size: {
-            x: 100,
-            y: 100,
-        },
-        pos: {
-            x: 600,
-            y: 150,
-        },
-        onClick: [ //TODO: MORE THEN ONE CLICK ACTION
-            {
-                type: function() {
-                    return getObjfromID("1").visible ? "hide" : "show";
-                },
-                id: "1"
-            },
-        ]
-    }, {
-        type: "rect", //TODO: TEXT
-        color: [100, 100, 100, 0.8],
-        //TODO: OPACITY FOR IMAGES
-        id: "1",
-        child: [{
-            type: "rect",
-            visible: true,
-            clickable: true,
-            draggable: true,
-            dragID: "1",
-            color: [255, 255, 255, 0.5],
-            //TODO: OPACITY FOR IMAGES
-            id: "4",
-            animation: [{
-                on: "show",
-                type: "fadein",
-                time: 200
-            }, {
-                on: "hide",
-                type: "fadeout",
-                time: 200
-            }],
-            size: {
-                x: 500,
-                y: 40,
-            },
-            pos: {
-                x: 0,
-                y: 0,
-            },
-        }, {
-            type: "rect",
-            visible: true,
-            clickable: false,
-            //dragID: "1",
-            color: [255, 255, 255, 0.8],
-            //TODO: OPACITY FOR IMAGES
-            id: "5",
-            animation: [{
-                on: "show",
-                type: "fadein",
-                time: 2000
-            }, {
-                on: "hide",
-                type: "fadeout",
-                time: 200
-            }],
-            size: {
-                x: 500,
-                y: 110,
-            },
-            pos: {
-                x: 0,
-                y: 40,
-            },
-        }, {
-            type: "imgrect",
-            id: "3",
-            clickable: true,
-            visible: true,
-            img_url: "./images/button_interaktiv.png",
-            size: {
-                x: 40,
-                y: 40,
-            },
-            pos: {
-                x: 460,
-                y: 0,
-            },
-            onClick: [{
-                type: "hide",
-                id: "1"
-            }],
-            animation: [{
-                on: "show",
-                type: "fadein",
-                time: 200
-            }, {
-                on: "hide",
-                type: "fadeout",
-                time: 200
-            }],
-
-        }, ],
-        //draggable: true,
-        animation: [{
-            on: "show",
-            type: "fadein",
-            time: 200
-        }, {
-            on: "hide",
-            type: "fadeout",
-            time: 200
-        }],
-        visible: false,
-        size: {
-            x: 500,
-            y: 150,
-        },
-        pos: {
-            x: 1020,
-            y: 450,
-        },
-    }];
+    var objects = [];
     
     var __klip = {
         
@@ -228,15 +99,25 @@ if (typeof Object.assign != 'function') {
     
    //var c,ct,container,constants;
     
-    this.create = function() {
+    this.create = function(conID,bgIMGurl, objs) {
         //GET ELM FROM ID
         //var c = $('#respondCanvas');
+        console.log(bgIMGurl)
+        __klip.container = $("#"+conID)
         
-        __klip.c = $('#respondCanvas');
+        __klip.container.empty()
+        
+        var cnvElm = document.createElement("CANVAS")
+        cnvElm.id = "klipElm"
+        document.getElementById(conID).appendChild(cnvElm)
+        
+        __klip.c = $('#'+ cnvElm.id);
         //GET CONTEXT
         __klip.ct = __klip.c.get(0).getContext('2d');
         //GET PARENT(CONTAINER)
-        __klip.container = $(__klip.c).parent();
+        //__klip.container = $(__klip.c).parent();
+        
+        objects = objs;
     
         //CONSTANTS
         __klip.constants = {
@@ -259,8 +140,11 @@ if (typeof Object.assign != 'function') {
         __klip.eventAnimRel[__klip.constants.events.hide] = [__klip.constants.animations.fadeout];
     
         //ADD BACKGROUND
-        __klip.background_img_url = (/^url\((['"]?)(.*)\1\)$/.exec($(".textimgs").css('background-image'))[2]);
+        //__klip.background_img_url = (/^url\((['"]?)(.*)\1\)$/.exec($(".textimgs").css('background-image'))[2]);
+        
         __klip.background_img = new Image();
+        
+        __klip.background_img_url = bgIMGurl;
     
         //PRELOAD IMAGE
         __klip.background_img.src = __klip.background_img_url;
@@ -566,10 +450,7 @@ if (typeof Object.assign != 'function') {
                 __klip.ct.stroke();
 
             default:
-
-
         }
-
     }
 
     //CALCULATE ANGLE BETWEEN POINTS IN RAD
@@ -856,7 +737,7 @@ if (typeof Object.assign != 'function') {
     function execOnClick(obj) {
         var type = obj.type;
         if(isFunction(obj.type)) {
-            type = obj.type()
+            type = obj.type(getObjfromID)
         }
         switch (type) {
             case 'show':
@@ -949,4 +830,3 @@ if (typeof Object.assign != 'function') {
 
 }).call(klip);
 
-klip.create()
