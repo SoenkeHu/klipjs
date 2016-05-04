@@ -5,13 +5,7 @@
         <title>Kleider mit Geschichten</title>
     </head>
     <body>
-        Hallo2
-        <div id="main" role="main">
-            <canvas id="respondCanvas" width="100" height="100">
-                < !-- Provide fallback -->
-            </canvas>
-        </div> 
-        <div class="textimgs">
+        <div class="textimgs" id="test123">
             
         </div>
         <!--
@@ -20,7 +14,141 @@
         canvas size = image size;
         
         -->
-        <script type="text/javascript" src="js/jquery-1.12.3.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
         <script type="text/javascript" src="js/main.js"></script>
+        <script>
+        /* global klip*/
+            klip.create("test123","http://www.wedonyc.net/cdn-images/2016/03/19/mobile-home-design-ideas-home-interior-designs-a-vintage-cottage-home-sharing-design.jpg",
+            [{
+                    type: "connector",
+                    from: "0",
+                    to: "1",
+                }, {
+                    type: "imgrect", //TODO: ROTATE
+                    id: "0",
+                    visible: true,
+                    img_url: "./images/button_interaktiv.png",
+                    size: {
+                        x: 100,
+                        y: 100,
+                    },
+                    pos: {
+                        x: 600,
+                        y: 150,
+                    },
+                    onClick: [ //TODO: MORE THEN ONE CLICK ACTION
+                        {
+                            type: function(getObjfromID) {
+                                return getObjfromID("1").visible ? "hide" : "show";
+                            },
+                            id: "1"
+                        },
+                    ]
+                }, {
+                    type: "rect", //TODO: TEXT
+                    color: [100, 100, 100, 0.8],
+                    //TODO: OPACITY FOR IMAGES
+                    id: "1",
+                    child: [{
+                        type: "rect",
+                        visible: true,
+                        clickable: true,
+                        draggable: true,
+                        dragID: "1",
+                        color: [255, 255, 255, 0.5],
+                        //TODO: OPACITY FOR IMAGES
+                        id: "4",
+                        animation: [{
+                            on: "show",
+                            type: "fadein",
+                            time: 200
+                        }, {
+                            on: "hide",
+                            type: "fadeout",
+                            time: 200
+                        }],
+                        size: {
+                            x: 500,
+                            y: 40,
+                        },
+                        pos: {
+                            x: 0,
+                            y: 0,
+                        },
+                    }, {
+                        type: "rect",
+                        visible: true,
+                        clickable: false,
+                        //dragID: "1",
+                        color: [255, 255, 255, 0.8],
+                        //TODO: OPACITY FOR IMAGES
+                        id: "5",
+                        animation: [{
+                            on: "show",
+                            type: "fadein",
+                            time: 2000
+                        }, {
+                            on: "hide",
+                            type: "fadeout",
+                            time: 200
+                        }],
+                        size: {
+                            x: 500,
+                            y: 110,
+                        },
+                        pos: {
+                            x: 0,
+                            y: 40,
+                        },
+                    }, {
+                        type: "imgrect",
+                        id: "3",
+                        clickable: true,
+                        visible: true,
+                        img_url: "./images/button_interaktiv.png",
+                        size: {
+                            x: 40,
+                            y: 40,
+                        },
+                        pos: {
+                            x: 460,
+                            y: 0,
+                        },
+                        onClick: [{
+                            type: "hide",
+                            id: "1"
+                        }],
+                        animation: [{
+                            on: "show",
+                            type: "fadein",
+                            time: 200
+                        }, {
+                            on: "hide",
+                            type: "fadeout",
+                            time: 200
+                        }],
+            
+                    }, ],
+                    //draggable: true,
+                    animation: [{
+                        on: "show",
+                        type: "fadein",
+                        time: 200
+                    }, {
+                        on: "hide",
+                        type: "fadeout",
+                        time: 200
+                    }],
+                    visible: false,
+                    size: {
+                        x: 500,
+                        y: 150,
+                    },
+                    pos: {
+                        x: 1020,
+                        y: 450,
+                    },
+                }])
+        </script>
     </body>
 </html>
