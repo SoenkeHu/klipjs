@@ -1,25 +1,40 @@
 /*global $*/
+/*global Image*/
 console.log("init");
 
 //CREATE CLOSURE
 if (typeof klip == 'undefined')
-klip = {};
+    var klip = {};
 
 //OBJECT.ASSIGN POLYFILL
-Object.assign = function assign(target, source) {
-    for (var index = 1, key, src; index < arguments.length; ++index) {
-        src = arguments[index];
-        for (key in src) {
-            if (Object.prototype.hasOwnProperty.call(src, key)) {
-                target[key] = src[key];
+//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#Polyfill
+if (typeof Object.assign != 'function') {
+  (function () {
+    Object.assign = function (target) {
+      'use strict';
+      if (target === undefined || target === null) {
+        throw new TypeError('Cannot convert undefined or null to object');
+      }
+
+      var output = Object(target);
+      for (var index = 1; index < arguments.length; index++) {
+        var source = arguments[index];
+        if (source !== undefined && source !== null) {
+          for (var nextKey in source) {
+            if (source.hasOwnProperty(nextKey)) {
+              output[nextKey] = source[nextKey];
             }
+          }
         }
-    }
-    return target;
-};
+      }
+      return output;
+    };
+  })();
+}
 
 //CREATE ANONYMOUS FUNCTION
 (function(){
+    
 
     //CREATE STAGE VARIABLEEEEEEEEE
     var settings = {
@@ -206,76 +221,91 @@ Object.assign = function assign(target, source) {
             y: 450,
         },
     }];
-
-    //GET ELM FROM ID
-    var c = $('#respondCanvas');
-    //GET CONTEXT
-    var ct = c.get(0).getContext('2d');
-    //GET PARENT(CONTAINER)
-    var container = $(c).parent();
-
-    //CONSTANTS
-    var constants = {
-        animations: {
-            fadein: "fadein",
-            flyin: "flyin",
-            fadeout: "fadeout"
-        },
-        events: {
-            show: "show",
-            hide: "hide"
-        }
-    };
     
-    //EVENTS ANIMATIONS RELATIONS
-    //FOR CALLING EVENTS FROM ANIMATIONS
-    var eventAnimRel = {};
-
-    eventAnimRel[constants.events.show] = [constants.animations.fadein, constants.animations.flyin];
-    eventAnimRel[constants.events.hide] = [constants.animations.fadeout];
-
-    //ADD BACKGROUND
-    var background_img_url = (/^url\((['"]?)(.*)\1\)$/.exec($(".textimgs").css('background-image'))[2]);
-    var background_img = new Image();
-
-    //PRELOAD IMAGE
-    background_img.src = background_img_url;
-    
-    //IF IMAGE HAS LOADED
-    background_img.onload = function(e) {
-        stage.size.x = background_img.width;
-        stage.size.y = background_img.height;
-        stage.img.size.x = background_img.width;
-        stage.img.size.y = background_img.height;
+    var __klip = {
         
-        //INIT OBJECTS
-        initObjects();
-    };
+    }
+    
+   //var c,ct,container,constants;
+    
+    this.create = function() {
+        //GET ELM FROM ID
+        //var c = $('#respondCanvas');
+        
+        __klip.c = $('#respondCanvas');
+        //GET CONTEXT
+        __klip.ct = __klip.c.get(0).getContext('2d');
+        //GET PARENT(CONTAINER)
+        __klip.container = $(__klip.c).parent();
+    
+        //CONSTANTS
+        __klip.constants = {
+            animations: {
+                fadein: "fadein",
+                flyin: "flyin",
+                fadeout: "fadeout"
+            },
+            events: {
+                show: "show",
+                hide: "hide"
+            }
+        };
+        
+        //EVENTS ANIMATIONS RELATIONS
+        //FOR CALLING EVENTS FROM ANIMATIONS
+        __klip.eventAnimRel = {};
+    
+        __klip.eventAnimRel[__klip.constants.events.show] = [__klip.constants.animations.fadein, __klip.constants.animations.flyin];
+        __klip.eventAnimRel[__klip.constants.events.hide] = [__klip.constants.animations.fadeout];
+    
+        //ADD BACKGROUND
+        __klip.background_img_url = (/^url\((['"]?)(.*)\1\)$/.exec($(".textimgs").css('background-image'))[2]);
+        __klip.background_img = new Image();
+    
+        //PRELOAD IMAGE
+        __klip.background_img.src = __klip.background_img_url;
+        
+        //IF IMAGE HAS LOADED
+        __klip.background_img.onload = function(e) {
+            stage.size.x = __klip.background_img.width;
+            stage.size.y = __klip.background_img.height;
+            stage.img.size.x = __klip.background_img.width;
+            stage.img.size.y = __klip.background_img.height;
+            
+            //INIT OBJECTS
+            initObjects();
+        };
+        console.log(__klip.c)
+        createClick();
+    
+        //ON RESIZE
+        $(window).resize(respondCanvas);
+    }
 
-    //ON RESIZE
-    $(window).resize(respondCanvas);
+
+    
 
     //RESPOND TO RESIZE
     function respondCanvas() {
         //CALCULATE OFFSET FOR CENTERED CANVAS
-        canvas.offset.x = c.offset().left;
-        canvas.offset.y = c.offset().top;
+        canvas.offset.x = __klip.c.offset().left;
+        canvas.offset.y = __klip.c.offset().top;
         
         //SET CANVAS WIDTH AND HEIGHT
-        canvas.size.x = $(container).width();
+        canvas.size.x = $(__klip.container).width();
 
-        c.attr('width', $(container).width());
+        __klip.c.attr('width', $(__klip.container).width());
         
         if (settings.flexHeight) {
             //SET HEIGHT OF CANVAS BY RATIO
-            var nheight = (stage.img.size.y / stage.img.size.x) * $(container).width();
-            c.attr('height', nheight);
+            var nheight = (stage.img.size.y / stage.img.size.x) * $(__klip.container).width();
+            __klip.c.attr('height', nheight);
             canvas.size.y = nheight;
         }
         else {
             //SET HEIGHT TO PARENT HEIGHT
-            c.attr('height', $(container).height());
-            canvas.size.y = $(container).height();
+            __klip.c.attr('height', $(__klip.container).height());
+            canvas.size.y = $(__klip.container).height();
         }
         
         //CALCULATE IMAGE RATIO
@@ -326,10 +356,8 @@ Object.assign = function assign(target, source) {
                 if (parent) {
                     el.__prnt = parent;
                 }
-<<<<<<< HEAD
-=======
+
                 //IF ELEMENT HAS CHILD CALL FUNCTION WITH CHILD
->>>>>>> parent of 502e1bd... added more comments
                 if (el.hasOwnProperty("child")) {
                     goThroughelm(el.child, el);
                 }
@@ -342,7 +370,7 @@ Object.assign = function assign(target, source) {
     //UPDATE EVERYTIME
     function updateCanvas() {
         //DRAW BACKGROUND
-        ct.drawImage(background_img, stage.offset.x, stage.offset.y, stage.size.x, stage.size.y);
+        __klip.ct.drawImage(__klip.background_img, stage.offset.x, stage.offset.y, stage.size.x, stage.size.y);
         //RENDER OBJECTS
         renderObjects(objects);
         //CALL FOR NEW FRAME
@@ -450,9 +478,9 @@ Object.assign = function assign(target, source) {
                 var elmp = getObjPos(el);
                 if (props.color) {
                     //USE OBJECT COLOR IF POSSIBLE
-                    ct.fillStyle = getColorRGBA(props.color);
+                    __klip.ct.fillStyle = getColorRGBA(props.color);
                 }
-                ct.fillRect(elmp.x, elmp.y, elmp.w, elmp.h);
+                __klip.ct.fillRect(elmp.x, elmp.y, elmp.w, elmp.h);
                 break;
                 
             //IMAGE
@@ -472,15 +500,15 @@ Object.assign = function assign(target, source) {
                 else {
                     if (props.alpha) {
                         //CHANGE GLOBAL ALPHA VALUE
-                        ct.globalAlpha = props.alpha;
+                        __klip.ct.globalAlpha = props.alpha;
                     }
                     
                     //DRAW IMAGE
-                    ct.drawImage(el.img, elmp.x, elmp.y, elmp.w, elmp.h);
+                    __klip.ct.drawImage(el.img, elmp.x, elmp.y, elmp.w, elmp.h);
                     
                     if (props.alpha) {
                         //RESET GLOBAL ALPHA VALUE
-                        ct.globalAlpha = 1;
+                        __klip.ct.globalAlpha = 1;
                     }
                 }
                 break;
@@ -516,8 +544,8 @@ Object.assign = function assign(target, source) {
                 var angle = (getAngleBetweenPoints(points[0][0], points[0][1], points[1][0], points[1][1]));
                 
                 //BEGIN PATH
-                ct.beginPath();
-                ct.moveTo(points[0][0], points[0][1]);
+                __klip.ct.beginPath();
+                __klip.ct.moveTo(points[0][0], points[0][1]);
                 
                 var angleR = angle //(roundToNearestNum(angle,toRan(360), toRan(45)))
                 
@@ -525,16 +553,17 @@ Object.assign = function assign(target, source) {
                 var distance = (getDistance(points[0][0], points[0][1], points[1][0], points[1][1]))
                 var point2x = points[0][0] + ((distance / 2) * Math.cos(angleR))
                 var point2y = points[0][1] + ((distance / 2) * Math.sin(angleR)) //(points[1][1]-points[0][1])
-
+                
+                //SET POINT AT HALF OF LINE ONE THIRD PERPENDICULAR TO LINE
                 var point2x2 = point2x + ((distance / 3) * Math.cos(angleR + toRan(Math.sign(points[0][0] - points[1][0]) * 90)))
                 var point2y2 = point2y + ((distance / 3) * Math.sin(angleR + toRan(Math.sign(points[0][0] - points[1][0]) * 90)))
 
-                ct.lineTo(point2x2, point2y2);
+                __klip.ct.lineTo(point2x2, point2y2);
 
-                ct.lineTo(points[1][0], points[1][1])
-                ct.lineWidth = 3;
-                ct.strokeStyle = "#FFFFFF";
-                ct.stroke();
+                __klip.ct.lineTo(points[1][0], points[1][1])
+                __klip.ct.lineWidth = 3;
+                __klip.ct.strokeStyle = "#FFFFFF";
+                __klip.ct.stroke();
 
             default:
 
@@ -543,6 +572,7 @@ Object.assign = function assign(target, source) {
 
     }
 
+    //CALCULATE ANGLE BETWEEN POINTS IN RAD
     function getAngleBetweenPoints(x1, y1, x2, y2) {
         var deltaY = y2 - y1;
         var deltaX = x2 - x1;
@@ -555,64 +585,73 @@ Object.assign = function assign(target, source) {
             return a;
         }
     }
-
+    
+    //ROUND TO NEAREST NUMBER (NUMBER, SCOPE, STEP)
     function roundToNearestNum(num, k, step) { //k = 360 num = 60 step = 45
         var stepsInK = k / step;
         //console.log(stepsInK)
         return Math.round((stepsInK / k) * num) * step
     }
 
+    //GET DISTANCE BETWEEN POINTS
     function getDistance(x1, y1, x2, y2) {
         return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
     }
 
+    //CONVERT DEGREE TO RAN
     function toRan(deg) {
-
         return deg * Math.PI / 180;
-
     }
 
     //SEARCH AND RETURN OBJECT FROM ID
     function getObjfromID(id, obj) { //TODO: SEARCH CHILD
+        //IF OBJ IS NOT SPECIFIED CHOOSE OBJECTS
         if(!obj) {
             obj = objects
         }
+        //IF OBJ STILL NULL RETURN EMPTY OBJECT FUN
         if(!obj)
             return {}
+            
+        //OBJECT FOR FOUND OBJECT
         var foundObj = {}
+        //RUN FUNCTION ON OBJ
         runOnArray(obj, function(e) {
             if (e.id == id) {
                 foundObj = e
             }
         }, [])
         return foundObj
-            /*return obj.filter(function(e) {
-                return e.id == id;
-                
-                if(e.)
-            })[0];*/
     }
 
     //DRAW ANIMATION FOR OBJECT
     function drawAnimation(el) {
-        //console.log(el.id)
+        //FOR ALL ACTIVE ANIMATIONS ON OBJECT
         for (var i = 0; i < el.__anim.active.length; i++) {
+            //RETURN ANIMATION SETTINGS FOR ACTIVE ANIMATION
             var animation = el.animation.filter(function(e) {
                 return e.type == el.__anim.active[i].type;
             })[0];
 
-
+            //SWITCH FOR ANIMATION TYPE
             switch (animation.type) {
-                case constants.animations.fadein:
+                case __klip.constants.animations.fadein:
+                    //SET ELEMENT TO VISIBLE
                     el.visible = true;
 
+                    //GET PROGRESS 0/1
                     var process = ((Date.now() - el.__anim.active[i].time) / animation.time);
-
+                    
+                    //IF OBJECT TYPE IS RECTANGLE
+                    //BECAUSE ALPHA AND RGBA ALPHA ARE DIFFERENT
                     if (el.type == "imgrect") {
                         el.__anim.props.alpha = (process / 1);
+                        
+                        //IF "PROCESS" IS FINISHED
                         if (process >= 1) {//TODO: CLEAN: IF IMGRECT AND FINISHED 
                             el.__anim.props.alpha = 1;
-                            console.log(el.type)
+                            
+                            //FILTER OUT CURRENT ANIMATION
                             el.__anim.active = el.__anim.active.filter(function(e) {
                                 return e.type != animation.type;
                             });
@@ -621,12 +660,13 @@ Object.assign = function assign(target, source) {
                         }
                         return;
                     }
-                    //console.log(el)
+                    
+                    //IF RECTANGLE
                     el.__anim.props.color = [];
                     var color = el.__anim.props.color;
                     color = Object.assign(color, el.color);
 
-                    //console.log(el.__anim.active[i].time)
+                    //IF "PROCESS" IS FINISHED
                     if (process >= 1) {
                         color[3] = el.color[3];
                         el.__anim.active = el.__anim.active.filter(function(e) {
@@ -638,7 +678,8 @@ Object.assign = function assign(target, source) {
 
                     break;
 
-                case constants.animations.fadeout:
+                case __klip.constants.animations.fadeout:
+                    //LOOK ABOVE
                     var process = ((Date.now() - el.__anim.active[i].time) / animation.time);
                     if (el.type == "imgrect") {
 
@@ -659,8 +700,6 @@ Object.assign = function assign(target, source) {
                     var color = el.__anim.props.color;
                     color = Object.assign(color, el.color);
 
-
-                    //console.log(el.__anim.active[i].time)
                     if (process >= 1) {
                         console.log("fin");
                         color[3] = 0;
@@ -680,8 +719,7 @@ Object.assign = function assign(target, source) {
 
     //START ANIMATION ON OBJECT FROM EVENT
     function createAnimation(el, event) {
-        //console.log("EVENT",event, el.id);
-        //console.log("CREATEANIMATION", el.id)
+        //CREATE __ANIM OBJECT IF NOT AVAILABLE
         if (el.animation) {
             if (!el.__anim) {
                 el.__anim = {
@@ -693,22 +731,25 @@ Object.assign = function assign(target, source) {
         else {
             return
         }
-
+        
+        //GET ANIMATIONS FOR EVENT
         var anims = el.animation.filter(function(e) {
             return e.on == event;
         });
 
         //TODO: clean and error handling
+        //FOR EVERY ANIMATION CORRESPONDING TO EVENT
         for (var i = 0; i < anims.length; i++) {
             var animation = anims[i];
             switch (animation.type) {
-                case constants.animations.fadein:
+                case __klip.constants.animations.fadein:
+                    //ADD ANIMATION TO OBJECT
                     addToActiveAnimation(el, {
                         type: animation.type,
                         time: Date.now()
                     });
                     break;
-                case constants.animations.fadeout:
+                case __klip.constants.animations.fadeout:
                     addToActiveAnimation(el, {
                         type: animation.type,
                         time: Date.now()
@@ -717,16 +758,22 @@ Object.assign = function assign(target, source) {
                 default:
             }
         }
-
         console.log(el)
     }
 
+    //RUN FUNCTION ON OBJECTS IN ARRAY
     function runOnArray(obj, fnct, params) {
         for (var i = 0; i < obj.length; i++) {
             var el = obj[i];
             var nparams = params.slice(0)
+            
+            //PREPEND OBJ TO PARAMS
             nparams.unshift(el)
+            
+            //RUN FUNCTION
             fnct.apply(this, nparams)
+            
+            //IF OBJ HAS CHILD RUN THIS FUNCTION ON CHILD
             if (el.hasOwnProperty("child")) {
                 runOnArray(el.child, fnct, params)
             }
@@ -745,14 +792,19 @@ Object.assign = function assign(target, source) {
         var clickedObjects = [];
 
         function checkObjs(obj) {
+            
+            //
             for (var i = 0; i < obj.length; i++) {
                 var el = obj[i];
                 if (el.hasOwnProperty("visible"))
                     if (el.visible == false)
                         continue;
+                
+                //CHECK IF MOUSE CLICK OVERLAPS WITH OBJECT
                 var hit = checkClick(el, event.pageX - canvas.offset.x, event.pageY - canvas.offset.y);
 
                 //TODO: CLEAN UP
+                //IF OBJECT IS CLICKABLE
                 if (hit && (!el.hasOwnProperty("clickable") || (el.hasOwnProperty("clickable") && el.clickable)) && (!el.hasOwnProperty("__anim") || (el.hasOwnProperty("__anim") && el.__anim.active.length == 0))) {
                     clickedObjects.push(el);
                     if (el.hasOwnProperty("child")) {
@@ -785,22 +837,22 @@ Object.assign = function assign(target, source) {
     function clickAction(obj) {
         if (!obj.onClick)
             return;
+        //FOR ONCLICK ACTIONS RUN EXECONCLICK
         for (var i = 0; obj.onClick.length > 0; i++) {
             if (!obj.onClick[i])
                 return
             var el = obj.onClick[i];
-            //console.log(el)
             execOnClick(el)
         }
-        console.log("click");
     }
-
     
+    //http://stackoverflow.com/questions/5999998/how-can-i-check-if-a-javascript-variable-is-function-type
     function isFunction(functionToCheck) {
         var getType = {};
         return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
     }
 
+    //EXECUTE EVENT ON OBJECT
     function execOnClick(obj) {
         var type = obj.type;
         if(isFunction(obj.type)) {
@@ -812,13 +864,12 @@ Object.assign = function assign(target, source) {
                     return e.id == obj.id;
                 });
                 if (shObj.length > 0 && !shObj[0].visible) {
-                    //shObj[0].visible = true;
-                    if (shObj[0].hasOwnProperty("child")) { // CHECK IF PARAM DOWN HIRACHIE
+                    //TODO: CHECK IF PARAM DOWN HIRACHIE
+                    if (shObj[0].hasOwnProperty("child")) { 
                         createAnimation(shObj[0], type);
                         runOnArray(shObj[0].child, createAnimation, [type])
                     }
                     createAnimation(shObj[0], type);
-                    //console.log(shObj[0]);
                 }
                 break;
             case 'hide':
@@ -826,7 +877,6 @@ Object.assign = function assign(target, source) {
                     return e.id == obj.id;
                 });
                 if (shObj.length > 0 && shObj[0].visible) {
-                    //shObj[0].visible = false;
                     if (shObj[0].hasOwnProperty("child")) { // CHECK IF PARAM DOWN HIRACHIE
                         createAnimation(shObj[0], type);
                         runOnArray(shObj[0].child, createAnimation, [type])
@@ -843,51 +893,60 @@ Object.assign = function assign(target, source) {
         return "rgba(" + el_color[0] + "," + el_color[1] + "," + el_color[2] + "," + (opacity || el_color[3]) + ")";
     }
 
-
-    //CLICK
-    c.on('click', function(event) {
-        var clickedObjects = getClickedObj(event);
-        if (clickedObjects.length > 0) {
-            clickAction(clickedObjects[clickedObjects.length - 1], true);
-        }
-    });
-    c.on('mousedown', function(event) {
-
-        var clickedObjects = getClickedObj(event);
-        if (clickedObjects.length > 0) {
-            var obj = (clickedObjects[clickedObjects.length - 1]);
-            if (obj.draggable) {
-                canvas.dnd.stage = 1;
+    function createClick() {
+        console.log(__klip)
+        //CLICK
+        __klip.c.on('click', function(event) {
+            //RUN CLICK FUNCTION ON CLICKED OBJECT
+            var clickedObjects = getClickedObj(event);
+            if (clickedObjects.length > 0) {
+                clickAction(clickedObjects[clickedObjects.length - 1], true);
+            }
+        });
+        __klip.c.on('mousedown', function(event) {
+            //EDIT DND STATE IF ENABLED
+            var clickedObjects = getClickedObj(event);
+            if (clickedObjects.length > 0) {
+                var obj = (clickedObjects[clickedObjects.length - 1]);
+                if (obj.draggable) {
+                    canvas.dnd.stage = 1;
+                }
+                else {
+                    return;
+                }
             }
             else {
                 return;
             }
-        }
-        else {
-            return;
-        }
-
-        if (obj.hasOwnProperty("dragID")) {
-            obj = getObjfromID(obj.dragID)
-        }
-
-        var relPos = getRelPos(obj);
-        canvas.dnd.fposx = (event.pageX - canvas.offset.x) - relPos.x;
-        canvas.dnd.fposy = (event.pageY - canvas.offset.y) - relPos.y;
-        canvas.dnd.fobj = obj;
-    });
-    c.on('mousemove', function(event) {
-        if (canvas.dnd.stage == 1) {
-            canvas.dnd.stage = 2;
-        }
-        if (canvas.dnd.stage == 2) {
-            var npos = resRelPoint((event.pageX - canvas.offset.x) - canvas.dnd.fposx, (event.pageY - canvas.offset.y) - canvas.dnd.fposy);
-            canvas.dnd.fobj.pos.x = npos.x;
-            canvas.dnd.fobj.pos.y = npos.y;
-        }
-    });
-    c.on('mouseup', function(event) {
-        canvas.dnd.stage = 0;
-    });
+            
+            //IF DRAGID SPECIFIED. IF ON OBJECT DRAG DRAG OTHER OBJ
+            if (obj.hasOwnProperty("dragID")) {
+                obj = getObjfromID(obj.dragID)
+            }
+    
+            var relPos = getRelPos(obj);
+            canvas.dnd.fposx = (event.pageX - canvas.offset.x) - relPos.x;
+            canvas.dnd.fposy = (event.pageY - canvas.offset.y) - relPos.y;
+            canvas.dnd.fobj = obj;
+        });
+        __klip.c.on('mousemove', function(event) {
+            
+            //PROGRESS TO DNG STAGE 2 IF DRAGGED
+            if (canvas.dnd.stage == 1) {
+                canvas.dnd.stage = 2;
+            }
+            if (canvas.dnd.stage == 2) {
+                var npos = resRelPoint((event.pageX - canvas.offset.x) - canvas.dnd.fposx, (event.pageY - canvas.offset.y) - canvas.dnd.fposy);
+                canvas.dnd.fobj.pos.x = npos.x;
+                canvas.dnd.fobj.pos.y = npos.y;
+            }
+        });
+        __klip.c.on('mouseup', function(event) {
+            canvas.dnd.stage = 0;
+        });
+    }
+   
 
 }).call(klip);
+
+klip.create()
