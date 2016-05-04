@@ -1,6 +1,5 @@
 /*global $*/
 /*global Image*/
-console.log("init");
 
 //CREATE CLOSURE
 if (typeof klip == 'undefined')
@@ -102,7 +101,6 @@ if (typeof Object.assign != 'function') {
     this.create = function(conID,bgIMGurl, objs) {
         //GET ELM FROM ID
         //var c = $('#respondCanvas');
-        console.log(bgIMGurl)
         __klip.container = $("#"+conID)
         
         __klip.container.empty()
@@ -159,7 +157,6 @@ if (typeof Object.assign != 'function') {
             //INIT OBJECTS
             initObjects();
         };
-        console.log(__klip.c)
         createClick();
     
         //ON RESIZE
@@ -470,7 +467,6 @@ if (typeof Object.assign != 'function') {
     //ROUND TO NEAREST NUMBER (NUMBER, SCOPE, STEP)
     function roundToNearestNum(num, k, step) { //k = 360 num = 60 step = 45
         var stepsInK = k / step;
-        //console.log(stepsInK)
         return Math.round((stepsInK / k) * num) * step
     }
 
@@ -582,7 +578,6 @@ if (typeof Object.assign != 'function') {
                     color = Object.assign(color, el.color);
 
                     if (process >= 1) {
-                        console.log("fin");
                         color[3] = 0;
                         el.__anim.active = el.__anim.active.filter(function(e) {
                             return e.type != animation.type;
@@ -639,7 +634,6 @@ if (typeof Object.assign != 'function') {
                 default:
             }
         }
-        console.log(el)
     }
 
     //RUN FUNCTION ON OBJECTS IN ARRAY
@@ -775,7 +769,6 @@ if (typeof Object.assign != 'function') {
     }
 
     function createClick() {
-        console.log(__klip)
         //CLICK
         __klip.c.on('click', function(event) {
             //RUN CLICK FUNCTION ON CLICKED OBJECT
