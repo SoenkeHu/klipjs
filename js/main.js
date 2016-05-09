@@ -100,21 +100,19 @@ if (typeof Object.assign != 'function') {
     
     this.create = function(conID,bgIMGurl, objs) {
         //GET ELM FROM ID
-        //var c = $('#respondCanvas');
-        __klip.container = $("#"+conID)
+        __klip.container = document.getElementById(conID)
         
-        __klip.container.empty()
+        __klip.container.innerHTML = '';
         
         var cnvElm = document.createElement("CANVAS")
         cnvElm.id = "klipElm"
         document.getElementById(conID).appendChild(cnvElm)
         
-        __klip.c = $('#'+ cnvElm.id);
+        __klip.c = document.getElementById(cnvElm.id);
         //GET CONTEXT
-        __klip.ct = __klip.c.get(0).getContext('2d');
+        __klip.ct = __klip.c.getContext('2d');
         //GET PARENT(CONTAINER)
-        //__klip.container = $(__klip.c).parent();
-        
+
         objects = objs;
     
         //CONSTANTS
@@ -138,8 +136,7 @@ if (typeof Object.assign != 'function') {
         __klip.eventAnimRel[__klip.constants.events.hide] = [__klip.constants.animations.fadeout];
     
         //ADD BACKGROUND
-        //__klip.background_img_url = (/^url\((['"]?)(.*)\1\)$/.exec($(".textimgs").css('background-image'))[2]);
-        
+
         __klip.background_img = new Image();
         
         __klip.background_img_url = bgIMGurl;
@@ -160,33 +157,41 @@ if (typeof Object.assign != 'function') {
         createClick();
     
         //ON RESIZE
-        $(window).resize(respondCanvas);
+        window.addEventListener('resize', respondCanvas);
     }
 
-
-    
+    //http://youmightnotneedjquery.com/#offset
+    function getOffset(el) {
+        var rect = el.getBoundingClientRect();
+        return {
+            top: rect.top + document.body.scrollTop,
+            left: rect.left + document.body.scrollLeft
+        }
+    }
 
     //RESPOND TO RESIZE
     function respondCanvas() {
         //CALCULATE OFFSET FOR CENTERED CANVAS
-        canvas.offset.x = __klip.c.offset().left;
-        canvas.offset.y = __klip.c.offset().top;
+        
+        
+        canvas.offset.x = getOffset(__klip.c).left;
+        canvas.offset.y = getOffset(__klip.c).top;
         
         //SET CANVAS WIDTH AND HEIGHT
-        canvas.size.x = $(__klip.container).width();
+        canvas.size.x = __klip.container.offsetWidth;
 
-        __klip.c.attr('width', $(__klip.container).width());
+        __klip.c.setAttribute('width', __klip.container.offsetWidth);
         
         if (settings.flexHeight) {
             //SET HEIGHT OF CANVAS BY RATIO
-            var nheight = (stage.img.size.y / stage.img.size.x) * $(__klip.container).width();
-            __klip.c.attr('height', nheight);
+            var nheight = (stage.img.size.y / stage.img.size.x) * __klip.container.offsetWidth;
+            __klip.c.setAttribute('height', nheight);
             canvas.size.y = nheight;
         }
         else {
             //SET HEIGHT TO PARENT HEIGHT
-            __klip.c.attr('height', $(__klip.container).height());
-            canvas.size.y = $(__klip.container).height();
+            __klip.c.setAttribute('height', __klip.container.offsetHeight);
+            canvas.size.y = __klip.container.offsetHeight;
         }
         
         //CALCULATE IMAGE RATIO
@@ -263,13 +268,7 @@ if (typeof Object.assign != 'function') {
         for (var i = 0; i < ary.length; i++) {
             var el = ary[i];
             //SKIP IS NOT VISIBLE AND HAS NO ANIMATION
-            /*
-            if (el.hasOwnProperty("visible"))
-                if (el.visible == false)
-                    //continue;
-                    TODO: IF OBJECT HAS ANIMATION: DISPLAY
-            */
-            
+
             //DRAW OBJECT
             drawObject(el);
             
@@ -445,7 +444,17 @@ if (typeof Object.assign != 'function') {
                 __klip.ct.lineWidth = 3;
                 __klip.ct.strokeStyle = "#FFFFFF";
                 __klip.ct.stroke();
-
+                break;
+            case "textbox":
+                //console.log(el)
+                var elmp = getObjPos(el);
+                var fillStyle = "#000000";
+                if (props.color) {
+                    //USE OBJECT COLOR IF POSSIBLE
+                    fillStyle = getColorRGBA(props.color);
+                }
+                create_text_wrap(__klip.ct,elmp.x,elmp.y,elmp.w,elmp.h,el.text,10,2, fillStyle)
+                break;
             default:
         }
     }
@@ -767,17 +776,28 @@ if (typeof Object.assign != 'function') {
     function getColorRGBA(el_color, opacity) {
         return "rgba(" + el_color[0] + "," + el_color[1] + "," + el_color[2] + "," + (opacity || el_color[3]) + ")";
     }
+    
+    //http://stackoverflow.com/questions/6348494/addeventlistener-vs-onclick
+    function addEvent(element, evnt, funct){
+        if (element.attachEvent)
+            return element.attachEvent('on'+evnt, funct);
+        else
+            return element.addEventListener(evnt, funct, false);
+    }
+
 
     function createClick() {
         //CLICK
-        __klip.c.on('click', function(event) {
+        
+        addEvent(__klip.c, "click",function(event) {
             //RUN CLICK FUNCTION ON CLICKED OBJECT
             var clickedObjects = getClickedObj(event);
             if (clickedObjects.length > 0) {
                 clickAction(clickedObjects[clickedObjects.length - 1], true);
             }
-        });
-        __klip.c.on('mousedown', function(event) {
+        })
+
+        addEvent(__klip.c, "mousedown",function(event) {
             //EDIT DND STATE IF ENABLED
             var clickedObjects = getClickedObj(event);
             if (clickedObjects.length > 0) {
@@ -802,8 +822,8 @@ if (typeof Object.assign != 'function') {
             canvas.dnd.fposx = (event.pageX - canvas.offset.x) - relPos.x;
             canvas.dnd.fposy = (event.pageY - canvas.offset.y) - relPos.y;
             canvas.dnd.fobj = obj;
-        });
-        __klip.c.on('mousemove', function(event) {
+        })
+        addEvent(__klip.c, "mousemove",function(event) {
             
             //PROGRESS TO DNG STAGE 2 IF DRAGGED
             if (canvas.dnd.stage == 1) {
@@ -814,11 +834,101 @@ if (typeof Object.assign != 'function') {
                 canvas.dnd.fobj.pos.x = npos.x;
                 canvas.dnd.fobj.pos.y = npos.y;
             }
-        });
-        __klip.c.on('mouseup', function(event) {
+        })
+
+        addEvent(__klip.c, "mouseup",function(event) {
             canvas.dnd.stage = 0;
-        });
+        })
     }
+    
+    
+    //http://sourcoder.blogspot.de/2012/12/text-wrapping-in-html-canvas.html
+    /**
+     * @param canvas : The canvas object where to draw . 
+     *                 This object is usually obtained by doing:
+     *                 canvas = document.getElementById('canvasId');
+     * @param x     :  The x position of the rectangle.
+     * @param y     :  The y position of the rectangle.
+     * @param w     :  The width of the rectangle.
+     * @param h     :  The height of the rectangle.
+     * @param text  :  The text we are going to centralize.
+     * @param fh    :  The font height (in pixels).
+     * @param spl   :  Vertical space between lines
+     */
+    function create_text_wrap(ctx, x, y, w, h, text, fh, spl, fillStyle) {
+        //console.log(x,y,w,h,text,fh,spl)
+        var Paint = {
+            //RECTANGLE_STROKE_STYLE : 'black',
+            //RECTANGLE_LINE_WIDTH : 1,
+            VALUE_FONT : fh+'px Arial',
+        }
+        /*
+         * @param mw    : The max width of the text accepted
+         * @param font  : The font used to draw the text
+         * @param text  : The text to be splitted   into 
+         */
+        var split_lines = function( mw, font, text) {
+            mw = mw;
+            // We setup the text font to the context (if not already)
+            ctx.font = font;
+            ctx.fillStyle = fillStyle;
+            // We split the text by words 
+            var words = text.split(' ');
+            var new_line = words[0];
+            var lines = [];
+            for(var i = 1; i < words.length; ++i) {
+               if (ctx.measureText(new_line + " " + words[i]).width < mw) {
+                   new_line += " " + words[i];
+               } else {
+                   lines.push(new_line);
+                   new_line = words[i];
+               }
+            }
+            lines.push(new_line);
+            // DEBUG 
+            // for(var j = 0; j < lines.length; ++j) {
+            //    console.log("line[" + j + "]=" + lines[j]);
+            // }
+            return lines;
+        }
+        // Obtains the context 2d of the canvas 
+        // It may return null
+        if (ctx) {
+            // draw rectangular
+            //ctx2d.strokeStyle=Paint.RECTANGLE_STROKE_STYLE;
+            //ctx2d.lineWidth = Paint.RECTANGLE_LINE_WIDTH;
+            //ctx2d.strokeRect(x, y, w, h);
+            // Paint text
+            var lines = split_lines(w, Paint.VALUE_FONT, text);
+            // Block of text height
+            var both = lines.length * (fh + spl);
+            if (both >= h) {
+                // We won't be able to wrap the text inside the area
+                // the area is too small. We should inform the user 
+                // about this in a meaningful way
+            } else {
+
+                // We determine the y of the first line
+                var ly = (h - both)/2 + y + spl*lines.length;
+                var lx = 0;
+                for (var j = 0, ly; j < lines.length; ++j, ly+=fh+spl) {
+                    // We continue to centralize the lines
+                    if(false) {
+                        lx = x+w/2-ctx.measureText(lines[j]).width/2;
+                    } else {
+                        lx = x
+                    }
+                    
+                    // DEBUG 
+                    //console.log("ctx2d.fillText('"+ lines[j] +"', "+ lx +", " + ly + ")");
+                    ctx.fillText(lines[j], lx, ly);
+                }
+            }
+        } else {
+        // Do something meaningful
+        }
+    }
+
    
 
 }).call(klip);
