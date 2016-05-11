@@ -453,7 +453,7 @@ if (typeof Object.assign != 'function') {
                     //USE OBJECT COLOR IF POSSIBLE
                     fillStyle = getColorRGBA(props.color);
                 }
-                create_text_wrap(__klip.ct,elmp.x,elmp.y,elmp.w,elmp.h,el.text,10,2, fillStyle)
+                create_text_wrap(__klip.ct,elmp.x,elmp.y,elmp.w,elmp.h,el.text,20*stage.zoom,2*stage.zoom, fillStyle)
                 break;
             default:
         }
@@ -902,10 +902,11 @@ if (typeof Object.assign != 'function') {
             var lines = split_lines(w, Paint.VALUE_FONT, text);
             // Block of text height
             var both = lines.length * (fh + spl);
-            if (both >= h) {
+            if (both >= h&&false) {
                 // We won't be able to wrap the text inside the area
                 // the area is too small. We should inform the user 
                 // about this in a meaningful way
+                console.log("kaputt")
             } else {
 
                 // We determine the y of the first line
@@ -932,4 +933,3 @@ if (typeof Object.assign != 'function') {
    
 
 }).call(klip);
-
