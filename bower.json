@@ -3,24 +3,21 @@
   "description": "A JavaScript library for Canvas-Management",
   "version": "0.0.1",
   "main": [
-    "src/main.js",
+    "src/main.js"
   ],
-  "dependencies": {
-  },
-  "devDependencies": {
-  },
+  "dependencies": {},
+  "devDependencies": {},
   "ignore": [
         "src",
         "examples",
         "bower.json",
         ".git",
         "README.md"
-    ],
-  "moduleType": [
   ],
+  "moduleType": [],
   "keywords": [
     "canvas",
-    "layers",
+    "layers"
    ],
   "authors": [
     "Sönke Hünkemeier <soenke@8em.de>"
