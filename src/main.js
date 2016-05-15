@@ -749,11 +749,10 @@ if (typeof Object.assign != 'function') {
                 });
                 if (shObj.length > 0 && !shObj[0].visible) {
                     //TODO: CHECK IF PARAM DOWN HIRACHIE
+                   createAnimation(shObj[0], type);
                     if (shObj[0].hasOwnProperty("child")) { 
-                        createAnimation(shObj[0], type);
                         runOnArray(shObj[0].child, createAnimation, [type])
                     }
-                    createAnimation(shObj[0], type);
                 }
                 break;
             case 'hide':
@@ -761,11 +760,10 @@ if (typeof Object.assign != 'function') {
                     return e.id == obj.id;
                 });
                 if (shObj.length > 0 && shObj[0].visible) {
+                    createAnimation(shObj[0], type);
                     if (shObj[0].hasOwnProperty("child")) { // CHECK IF PARAM DOWN HIRACHIE
-                        createAnimation(shObj[0], type);
                         runOnArray(shObj[0].child, createAnimation, [type])
                     }
-                    createAnimation(shObj[0], type);
                 }
                 break;
             default:
