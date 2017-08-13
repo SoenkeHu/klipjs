@@ -35,7 +35,7 @@ if (typeof Object.assign != 'function') {
 (function(){
     
 
-    //CREATE STAGE VARIABLEEEEEEEEE
+    //CREATE STAGE VARIABLE
     var settings = {
         //DETERMINES IF THE CANVAS IS FLEXIBLE OR FIXED
         flexHeight: true,
@@ -95,9 +95,7 @@ if (typeof Object.assign != 'function') {
     var __klip = {
         
     }
-    
-   //var c,ct,container,constants;
-    
+        
     this.create = function(conID,bgIMGurl, objs) {
         //GET ELM FROM ID
         __klip.container = document.getElementById(conID)
@@ -172,7 +170,6 @@ if (typeof Object.assign != 'function') {
     //RESPOND TO RESIZE
     function respondCanvas() {
         //CALCULATE OFFSET FOR CENTERED CANVAS
-        
         
         canvas.offset.x = getOffset(__klip.c).left;
         canvas.offset.y = getOffset(__klip.c).top;
@@ -307,7 +304,7 @@ if (typeof Object.assign != 'function') {
 
     //GET RELATIVE POSITION OF OBJECT AND CHILD OBJECT
     function getObjPos(el) {
-        if (el.__prnt) { //TODO: CHECK IF REL: FALSE
+        if (el.__prnt) {
         
             //RUN FUNCTIONS WITH OBJECT
             return getRelPos({
@@ -343,9 +340,7 @@ if (typeof Object.assign != 'function') {
         if (el.hasOwnProperty("visible"))
             if (el.visible == false)
                 return;
-        //TODO: CLEAN UP
-
-
+        
         //TODO: ALL FUNCTIONS TO OBJECT // EXTENSIONS
         //SWITCH AFTER TYPE
         switch (el.type) {
@@ -446,7 +441,6 @@ if (typeof Object.assign != 'function') {
                 __klip.ct.stroke();
                 break;
             case "textbox":
-                //console.log(el)
                 var elmp = getObjPos(el);
                 var fillStyle = "#000000";
                 if (props.color) {
@@ -677,7 +671,6 @@ if (typeof Object.assign != 'function') {
 
         function checkObjs(obj) {
             
-            //
             for (var i = 0; i < obj.length; i++) {
                 var el = obj[i];
                 if (el.hasOwnProperty("visible"))
@@ -687,7 +680,6 @@ if (typeof Object.assign != 'function') {
                 //CHECK IF MOUSE CLICK OVERLAPS WITH OBJECT
                 var hit = checkClick(el, event.pageX - canvas.offset.x, event.pageY - canvas.offset.y);
 
-                //TODO: CLEAN UP
                 //IF OBJECT IS CLICKABLE
                 if (hit && (!el.hasOwnProperty("clickable") || (el.hasOwnProperty("clickable") && el.clickable)) && (!el.hasOwnProperty("__anim") || (el.hasOwnProperty("__anim") && el.__anim.active.length == 0))) {
                     clickedObjects.push(el);
